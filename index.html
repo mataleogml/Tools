@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="mdui-theme-dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Conversion Tools</title>
+    <link rel="stylesheet" href="https://unpkg.com/mdui@2/mdui.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            background-color: #121212;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .card-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .tool-card {
+            width: 300px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            padding: 2%;
+        }
+        .tool-card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card-container">
+            <mdui-card class="tool-card" id="videoCompressCard">
+                <mdui-card-header>
+                    <mdui-card-header-title>Video Compress</mdui-card-header-title>
+                </mdui-card-header>
+                <mdui-card-content>
+                    <mdui-icon name="video_file" size="64px"></mdui-icon>
+                    <p>Compress your videos efficiently</p>
+                </mdui-card-content>
+            </mdui-card>
+
+            <mdui-card class="tool-card" id="webpConversionCard">
+                <mdui-card-header>
+                    <mdui-card-header-title>WebP Conversion</mdui-card-header-title>
+                </mdui-card-header>
+                <mdui-card-content>
+                    <mdui-icon name="image" size="64px"></mdui-icon>
+                    <p>Convert images to WebP format</p>
+                </mdui-card-content>
+            </mdui-card>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/mdui@2/mdui.global.js"></script>
+    <script>
+        document.getElementById('videoCompressCard').addEventListener('click', () => {
+            window.location.href = 'videoCompress/index.html';
+        });
+
+        document.getElementById('webpConversionCard').addEventListener('click', () => {
+            window.location.href = 'webp/index.html';
+        });
+    </script>
+</body>
+</html>
