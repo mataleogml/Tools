@@ -1,129 +1,23 @@
 <!DOCTYPE html>
-<html lang="zh-CN" class="mdui-theme-dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Media Converter</title>
-    <link rel="stylesheet" href="https://unpkg.com/mdui@2/mdui.css">
-    <style>
-        body {
-            background-color: #121212;
-            color: #ffffff;
-        }
-        .center-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .upload-card {
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-            padding: 40px;
-            height: 300px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-        .upload-content, .progress-content {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-        .progress-content {
-            display: none;
-        }
-        .media-container {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-            gap: 20px;
-        }
-        .media-card {
-            flex: 1;
-        }
-        video, img {
-            width: 100%;
-            max-height: 300px;
-            object-fit: contain;
-        }
-        .file-info {
-            margin-top: 10px;
-        }
-        .download-button {
-            margin-top: 20px;
-        }
-    </style>
+    <title>Media Processing Tool</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
 </head>
 <body>
-    <mdui-layout>
-        <mdui-layout-main class="mdui-container mdui-p-t-4 mdui-p-b-4">
-            <div id="uploadContainer" class="center-container">
-                <mdui-card id="uploadCard" variant="filled" clickable class="upload-card">
-                    <div class="upload-content">
-                        <mdui-icon name="upload" size="48px"></mdui-icon>
-                        <h2>Drag and drop media file to convert</h2>
-                        <p>Processing happens on your device, no data is sent to our servers</p>
-                    </div>
-                    <div class="progress-content">
-                        <mdui-circular-progress></mdui-circular-progress>
-                        <p>Processing media...</p>
-                    </div>
-                </mdui-card>
-            </div>
-
-            <div id="mediaContainer" class="media-container" style="display: none;">
-                <mdui-card class="media-card">
-                    <mdui-card-header>
-                        <mdui-card-header-title>Original Media</mdui-card-header-title>
-                    </mdui-card-header>
-                    <div id="originalMediaContainer"></div>
-                    <mdui-card-content>
-                        <div class="file-info">
-                            <p>Size: <span id="originalSize"></span></p>
-                        </div>
-                    </mdui-card-content>
-                </mdui-card>
-
-                <mdui-card class="media-card">
-                    <mdui-card-header>
-                        <mdui-card-header-title>Processed Media</mdui-card-header-title>
-                        <mdui-badge id="processingBadge" color="success"></mdui-badge>
-                    </mdui-card-header>
-                    <div id="processedMediaContainer"></div>
-                    <mdui-card-content>
-                        <div class="file-info">
-                            <p>Size: <span id="processedSize"></span></p>
-                        </div>
-                        <div class="download-button">
-                            <mdui-button id="downloadBtn" variant="filled">Download</mdui-button>
-                        </div>
-                    </mdui-card-content>
-                </mdui-card>
-            </div>
-        </mdui-layout-main>
-    </mdui-layout>
-
-    <mdui-dialog id="actionDialog">
-        <mdui-dialog-title>Select an action</mdui-dialog-title>
-        <mdui-dialog-content>
-            <mdui-radio-group id="actionRadioGroup">
-                <!-- Radio buttons will be dynamically added here -->
-            </mdui-radio-group>
-        </mdui-dialog-content>
-        <mdui-dialog-actions>
-            <mdui-button id="cancelActionBtn">Cancel</mdui-button>
-            <mdui-button id="confirmActionBtn">Confirm</mdui-button>
-        </mdui-dialog-actions>
-    </mdui-dialog>
-
-    <script src="https://unpkg.com/mdui@2/mdui.global.js"></script>
-    <script src="app.js"></script>
+    <div id="app">
+        <h1>Media Processing Tool</h1>
+        <div id="drop-zone">
+            <p>Drag & Drop files here or click to select</p>
+            <input type="file" id="file-input" accept="image/*,audio/*,video/*">
+        </div>
+        <div id="preview-container"></div>
+        <div id="processing-options"></div>
+        <div id="error-container"></div>
+    </div>
+    <script type="module" src="app.js"></script>
 </body>
 </html>

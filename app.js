@@ -1,201 +1,118 @@
-let currentFile = null;
-let availableFunctions = [];
+// app.js
+import MediaProcessor from './mediaProcessor.js';
+import ImageProcessor from './image.js';
 
-const uploadContainer = document.getElementById('uploadContainer');
-const uploadCard = document.getElementById('uploadCard');
-const uploadContent = document.querySelector('.upload-content');
-const progressContent = document.querySelector('.progress-content');
-const mediaContainer = document.getElementById('mediaContainer');
-const originalMediaContainer = document.getElementById('originalMediaContainer');
-const processedMediaContainer = document.getElementById('processedMediaContainer');
-const originalSizeSpan = document.getElementById('originalSize');
-const processedSizeSpan = document.getElementById('processedSize');
-const processingBadge = document.getElementById('processingBadge');
-const downloadBtn = document.getElementById('downloadBtn');
+class App {
+    constructor() {
+        this.mediaProcessor = new MediaProcessor();
+        this.imageProcessor = new ImageProcessor();
+        this.init();
+    }
 
-const actionDialog = document.getElementById('actionDialog');
-const actionRadioGroup = document.getElementById('actionRadioGroup');
-const cancelActionBtn = document.getElementById('cancelActionBtn');
-const confirmActionBtn = document.getElementById('confirmActionBtn');
-
-uploadCard.addEventListener('click', () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'video/*,image/*,audio/*';
-    input.onchange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            handleFile(file);
+    async init() {
+        try {
+            await this.mediaProcessor.init();
+            console.log('Media Processor initialized successfully');
+            this.setupEventListeners();
+        } catch (error) {
+            console.error('Failed to initialize Media Processor:', error);
+            this.showError('Failed to initialize the application. ' + error.message);
         }
-    };
-    input.click();
-});
+    }
 
-uploadCard.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    uploadCard.style.borderColor = '#1976d2';
-});
+    setupEventListeners() {
+        const fileInput = document.getElementById('file-input');
+        const dropZone = document.getElementById('drop-zone');
 
-uploadCard.addEventListener('dragleave', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    uploadCard.style.borderColor = '#666';
-});
+        fileInput.addEventListener('change', (event) => this.handleFileSelect(event.target.files));
 
-uploadCard.addEventListener('drop', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    uploadCard.style.borderColor = '#666';
-    
-    const file = e.dataTransfer.files[0];
-    if (file) {
-        handleFile(file);
-    } else {
-        mdui.snackbar({
-            message: 'Please drop a valid media file.',
-            placement: 'top',
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            this.handleFileSelect(e.dataTransfer.files);
         });
     }
-});
 
-cancelActionBtn.addEventListener('click', () => {
-    actionDialog.open = false;
-});
+    async handleFileSelect(files) {
+        if (files.length === 0) return;
 
-confirmActionBtn.addEventListener('click', () => {
-    const selectedIndex = actionRadioGroup.value;
-    if (selectedIndex !== null) {
-        actionDialog.open = false;
-        showProgressIndicator();
-        processMedia(currentFile, availableFunctions[selectedIndex]);
-    } else {
-        mdui.snackbar({
-            message: 'Please select an action.',
-            placement: 'top',
-        });
-    }
-});
+        const file = files[0];
+        const fileType = this.getFileType(file);
 
-async function handleFile(file) {
-    currentFile = file;
-    const fileType = file.type.split('/')[0]; // 'image', 'video', or 'audio'
-    
-    try {
-        availableFunctions = await loadFunctions(fileType);
-        if (availableFunctions.length === 0) {
-            throw new Error('No applicable functions found');
+        if (!fileType) {
+            this.showError('Please select an image, audio, or video file.');
+            return;
         }
-        setupActionSelection(availableFunctions);
-        actionDialog.open = true;
-    } catch (error) {
-        console.error('Error loading functions:', error);
-        mdui.snackbar({
-            message: 'Unsupported file type or no applicable functions found.',
-            placement: 'top',
-        });
-    }
-}
 
-async function loadFunctions(fileType) {
-    const functions = [];
-    try {
-        const moduleFiles = await fetch(`/functions/${fileType}/`).then(res => res.json());
-        for (const file of moduleFiles) {
-            if (file.endsWith('.js')) {
-                const module = await import(`/functions/${fileType}/${file}`);
-                functions.push(module.default);
+        try {
+            if (fileType === 'image') {
+                await this.imageProcessor.processImage(file);
+            } else {
+                await this.mediaProcessor.processMedia(file);
             }
+            this.showPreview(file);
+        } catch (error) {
+            console.error('Error processing file:', error);
+            this.showError('An error occurred while processing the file.');
         }
-    } catch (error) {
-        console.error('Error loading function modules:', error);
     }
-    return functions;
-}
 
-function setupActionSelection(functions) {
-    actionRadioGroup.innerHTML = '';
-    functions.forEach((func, index) => {
-        const radioButton = document.createElement('mdui-radio');
-        radioButton.value = index;
-        radioButton.textContent = func.name;
-        actionRadioGroup.appendChild(radioButton);
-    });
-}
+    getFileType(file) {
+        if (file.type.startsWith('image/')) return 'image';
+        if (file.type.startsWith('audio/')) return 'audio';
+        if (file.type.startsWith('video/')) return 'video';
+        return null;
+    }
 
-function showProgressIndicator() {
-    uploadContent.style.display = 'none';
-    progressContent.style.display = 'flex';
-}
+    showPreview(file) {
+        const previewContainer = document.getElementById('preview-container');
+        previewContainer.innerHTML = '';
 
-function hideUploadCard() {
-    uploadContainer.style.display = 'none';
-    mediaContainer.style.display = 'flex';
-}
+        const fileType = this.getFileType(file);
 
-async function processMedia(file, func) {
-    try {
-        const originalSize = file.size;
-        originalSizeSpan.textContent = formatBytes(originalSize);
+        switch (fileType) {
+            case 'image':
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                img.style.maxWidth = '100%';
+                previewContainer.appendChild(img);
+                break;
+            case 'audio':
+                const audio = document.createElement('audio');
+                audio.src = URL.createObjectURL(file);
+                audio.controls = true;
+                previewContainer.appendChild(audio);
+                break;
+            case 'video':
+                const video = document.createElement('video');
+                video.src = URL.createObjectURL(file);
+                video.controls = true;
+                video.style.maxWidth = '100%';
+                previewContainer.appendChild(video);
+                break;
+        }
+    }
 
-        const originalUrl = URL.createObjectURL(file);
-        displayMedia(originalMediaContainer, file.type, originalUrl);
-
-        const processedBlob = await func.apply(file);
-        const processedUrl = URL.createObjectURL(processedBlob);
-        displayMedia(processedMediaContainer, processedBlob.type, processedUrl);
-
-        const processedSize = processedBlob.size;
-        processedSizeSpan.textContent = formatBytes(processedSize);
-
-        const ratio = ((1 - processedSize / originalSize) * 100).toFixed(2);
-        processingBadge.textContent = `${ratio}% smaller`;
-
-        hideUploadCard();
-
-        downloadBtn.onclick = () => {
-            const a = document.createElement('a');
-            a.href = processedUrl;
-            a.download = `processed_${file.name}`;
-            a.click();
-        };
-    } catch (error) {
-        console.error('Error processing media:', error);
-        mdui.snackbar({
-            message: 'An error occurred while processing the media.',
-            placement: 'top',
-            timeout: 10000,
-        });
-        // Reset the upload card to its initial state
-        uploadContent.style.display = 'flex';
-        progressContent.style.display = 'none';
+    showError(message) {
+        const errorContainer = document.getElementById('error-container');
+        errorContainer.textContent = message;
+        errorContainer.style.display = 'block';
+        setTimeout(() => {
+            errorContainer.style.display = 'none';
+        }, 5000);
     }
 }
 
-function displayMedia(container, type, url) {
-    container.innerHTML = '';
-    if (type.startsWith('video/')) {
-        const video = document.createElement('video');
-        video.src = url;
-        video.controls = true;
-        container.appendChild(video);
-    } else if (type.startsWith('image/')) {
-        const img = document.createElement('img');
-        img.src = url;
-        container.appendChild(img);
-    } else if (type.startsWith('audio/')) {
-        const audio = document.createElement('audio');
-        audio.src = url;
-        audio.controls = true;
-        container.appendChild(audio);
-    }
-}
-
-function formatBytes(bytes, decimals = 2) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-}
+// Initialize the app when the DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    new App();
+});
